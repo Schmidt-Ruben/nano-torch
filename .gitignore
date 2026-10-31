@@ -1,0 +1,15 @@
+
+__pycache__/
+*.pyc
+
+.venv/
+
+
+.vscode/
+
+.DS_Store
+
+mnist_dataset/
+model_checkpoints/
+*.npz
+

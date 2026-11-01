@@ -137,6 +137,15 @@ class Tensor:
         other = _to_tensor(other)
         return other.__matmul__(self)
 
+    def __getitem__(self, ids):
+        data = self.data[ids]
+        out = Tensor(data=data, _prev=(self, ), _op="getitem", requires_grad=True)
+
+        def _backward():
+            np.add.at(self.grad, ids, out.grad)
+        
+        return out._attach(_backward)
+
     def exp(self):
         data = np.exp(self.data)
         out = Tensor(data=data, _prev=(self,), _op="exp", requires_grad=True)
@@ -239,7 +248,8 @@ class Tensor:
     def item(self):
         return self.data.item()
 
-    def topological_order(self):
+    # works but might hit recursion limit better to use iterative TO
+    def recursive_topological_order(self): 
         visited = set()
         topological_order = []
 
@@ -252,6 +262,25 @@ class Tensor:
             topological_order.append(node)
 
         visit(self)
+        return topological_order
+
+    # Iterative version to avoid recursion limit
+    def topological_order(self):
+        stack = [(self, False)]
+        topological_order = []
+        visited = set()
+
+        while stack:
+            node, state = stack.pop()
+            if state:
+                topological_order.append(node)
+            elif node not in visited:
+                visited.add(node)
+                stack.append((node, True))
+                for parent in node._prev:
+                    if parent not in visited:
+                        stack.append((parent, False))
+
         return topological_order
 
     def backward(self):

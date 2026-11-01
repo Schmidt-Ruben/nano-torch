@@ -47,3 +47,17 @@ class Adam(Optimizer):
             v_hat = self.v[index] / (1 - self.beta2**self.t)
 
             self.parameters[index].data -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
+
+
+def clip_grad_norm(parameters, max_norm=1):
+    param_sum = 0
+    for parameter in parameters:
+        param_sum += np.sum(parameter.grad)
+
+    norm = np.sqrt(param_sum)
+
+    if norm > max_norm:
+        for parameter in parameters:
+            parameter.grad = (max_norm / norm) * parameter.grad + 1e-6 #avoiding div by zero
+
+    return norm

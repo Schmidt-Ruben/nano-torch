@@ -1,4 +1,4 @@
-from tensor import Parameter
+from tensor import Parameter, Tensor
 
 
 class Module:
@@ -70,7 +70,15 @@ class Sequential(Module):
 
         return x
 
+class Embedding:
+    def __init__(self, num_embeddings, embedding_dim):
+        self.weight = Parameter.normal(num_embeddings, embedding_dim, std=0.02**2)
+
+    def forward(self, ids):
+        if ids.dtype != 'int64':
+            raise TypeError('ids musst be dtype int64')
+        return self.weight[ids]
+
 
 def cross_entropy(logits, targets):
-    # Mean cross entropy over the batch; targets are one-hot encoded
     return -(1 / logits.shape[0]) * (logits.log_softmax() * targets).sum()

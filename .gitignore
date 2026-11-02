@@ -13,3 +13,5 @@ mnist_dataset/
 model_checkpoints/
 *.npz
 
+.VSCodeCounter
+text_dataset

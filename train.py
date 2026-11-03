@@ -2,9 +2,9 @@ import struct
 
 import numpy as np
 
-from data import one_hot_encoding, get_batches
+from data import get_batches
 from nn import Sequential, Linear, ReLU, cross_entropy
-from optim import SGD
+from optim import SGD, Adam
 from tensor import Tensor, NoGrad
 
 EPOCHS = 5
@@ -29,7 +29,7 @@ def load_mnist_labels(filename):
     with open(filename, "rb") as f:
         magic, num_labels = struct.unpack(">II", f.read(8))
 
-        labels = np.fromfile(f, dtype=np.uint8)
+        labels = np.fromfile(f, dtype="uint8")
         return labels
 
 
@@ -37,9 +37,6 @@ X_train = load_mnist_images("mnist_dataset/train-images.idx3-ubyte")
 Y_train = load_mnist_labels("mnist_dataset/train-labels.idx1-ubyte")
 X_test = load_mnist_images("mnist_dataset/t10k-images.idx3-ubyte")
 Y_test = load_mnist_labels("mnist_dataset/t10k-labels.idx1-ubyte")
-
-Y_test_encoded = one_hot_encoding(Y_test, 10)
-Y_train_encoded = one_hot_encoding(Y_train, 10)
 
 model = Sequential(
     Linear(784, 128),
@@ -52,9 +49,9 @@ for epoch in range(EPOCHS):
     total_loss = 0.0
     n_batches = 0
 
-    for X_batch, Y_batch in get_batches(X_train, Y_train_encoded, batch_size=BATCH_SIZE):
+    for X_batch, Y_batch in get_batches(X_train, Y_train, batch_size=BATCH_SIZE):
         x = Tensor(X_batch)
-        y = Tensor(Y_batch)
+        y = Tensor(Y_batch, dtype="int64")
 
         optimizer.zero_grad()
         logits = model(x)

@@ -9,7 +9,7 @@ class Optimizer:
 
     def zero_grad(self):
         for parameter in self.parameters:
-            parameter.grad = np.zeros(shape=parameter.shape)
+            parameter.grad = np.zeros(shape=parameter.shape, dtype=DTYPE)
 
 
 class SGD(Optimizer):
@@ -52,12 +52,12 @@ class Adam(Optimizer):
 def clip_grad_norm(parameters, max_norm=1):
     param_sum = 0
     for parameter in parameters:
-        param_sum += np.sum(parameter.grad)
+        param_sum += np.sum(parameter.grad**2)
 
     norm = np.sqrt(param_sum)
 
     if norm > max_norm:
         for parameter in parameters:
-            parameter.grad = (max_norm / norm) * parameter.grad + 1e-6 #avoiding div by zero
+            parameter.grad = (max_norm / (norm + 1e-6)) * parameter.grad #avoiding div by zero
 
     return norm

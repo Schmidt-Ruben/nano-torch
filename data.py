@@ -2,14 +2,11 @@ import numpy as np
 
 class CharTokenizer:
     def __init__(self, text):
-        if not str:
+        if not text:
             raise ValueError("Text can't be empty.")
         
         self.text = text
         self.chars = sorted(set(text))
-        stoi = dict()
-        for char, idx in enumerate(self.chars):
-            stoi[char] = idx
         self.stoi = {char: idx for idx, char in enumerate(self.chars)}
         self.itos = {v: k for k, v in self.stoi.items()}
         self.V = len(self.chars)
@@ -23,19 +20,13 @@ class CharTokenizer:
 
     def decode(self, ids):
         if ids.ndim != 1:
-            raise ValueError('ids musst be of dimension 1.')
+            raise ValueError('ids must be of dimension 1.')
         invalid_ids = [id for id in ids if id < 0 or id >= self.V]
         if invalid_ids:
             raise ValueError(f'Invalid ids: {invalid_ids}')
         s = "".join([self.itos[id] for id in ids])
         return s
         
-
-def one_hot_encoding(array, labels):
-    encoded_labels = np.zeros((array.size, labels), dtype=int)
-    encoded_labels[np.arange(array.size), array] = 1
-    return encoded_labels
-
 
 def get_batches(X, Y, batch_size, shuffle=True):
     idx = np.random.permutation(len(X)) if shuffle else np.arange(len(X))
@@ -51,18 +42,18 @@ def load_text(path):
 
 def train_val_split(data, train_frac=0.9):
     if data.ndim != 1:
-        raise ValueError("Data musst be of dimension 1.")
+        raise ValueError("Data must be of dimension 1.")
     if train_frac > 1 or train_frac < 0:
-        raise ValueError("Train Eval split musst be between 0 and 1.")
-    n = np.floor(len(data) * train_frac)
+        raise ValueError("Train Eval split must be between 0 and 1.")
+    n = int(len(data) * train_frac)
     return (data[:n], data[n:])
 
-def get_text_batch(data, batch_size, block_size, rng=0):
+def get_text_batch(data, batch_size, block_size, rng=None): #rng is np random generator
+    rng = np.random.default_rng(rng)
     if data.ndim != 1:
-        raise ValueError("Data musst be of dimension 1.")
-    rng = np.random.default_rng(seed=rng)
+        raise ValueError("Data must be of dimension 1.")
     start_ids = rng.integers(low=0, high=(data.size - block_size), size=(batch_size, 1))
-    index_matrix = start_ids + np.arange(0, block_size-1)
+    index_matrix = start_ids + np.arange(0, block_size)
     x_batch = data[index_matrix]
     y_batch = data[index_matrix + 1]
 

@@ -5,15 +5,17 @@ _grad_enabled = True
 
 
 class Tensor:
-    def __init__(self, data, _prev=(), _op="", requires_grad=False):
+    __array_ufunc__ = None
+
+    def __init__(self, data, _prev=(), _op="", requires_grad=False, dtype=None):
+        dtype = DTYPE if dtype is None else dtype
         if isinstance(data, Tensor):
             raise TypeError("Tensor does not accept Tensor as data.")
-
-        self.data = np.array(data, dtype=DTYPE)
-        self.grad = np.zeros(self.shape, dtype=DTYPE)
+        self.requires_grad = requires_grad if _grad_enabled else False
+        self.data = np.asarray(data, dtype=dtype) 
+        self.grad = np.zeros(self.shape, dtype=self.data.dtype) if self.requires_grad else None
         self._prev = _prev if _grad_enabled else ()
         self._op = _op
-        self.requires_grad = requires_grad if _grad_enabled else False
         self._backward = lambda: None
 
     @property
@@ -24,13 +26,17 @@ class Tensor:
     def ndim(self):
         return self.data.ndim
 
+    @property
+    def dtype(self):
+        return self.data.dtype
+
     @classmethod
     def zeros(cls, shape: tuple[int, ...], requires_grad=False):
-        return cls(np.zeros(shape), requires_grad=requires_grad)
+        return cls(np.zeros(shape, dtype=DTYPE), requires_grad=requires_grad)
 
     @classmethod
     def ones(cls, shape: tuple[int, ...], requires_grad=False):
-        return cls(np.ones(shape), requires_grad=requires_grad)
+        return cls(np.ones(shape, dtype=DTYPE), requires_grad=requires_grad)
 
     @classmethod
     def normal(cls, shape: tuple[int, ...], std=1.0, loc=0.0, requires_grad=False):
@@ -45,11 +51,13 @@ class Tensor:
     def __add__(self, other):
         other = _to_tensor(other)
         data = self.data + other.data
-        out = Tensor(data=data, _prev=(self, other), _op="add", requires_grad=True)
+        out = Tensor(data=data, _prev=(self, other), _op="add", requires_grad=(self.requires_grad or other.requires_grad))
 
         def _backward():
-            self.grad += _unbroadcast(out.grad, self.shape)
-            other.grad += _unbroadcast(out.grad, other.shape)
+            if self.requires_grad:
+                self.grad += _unbroadcast(out.grad, self.shape)
+            if other.requires_grad:
+                other.grad += _unbroadcast(out.grad, other.shape)
 
         return out._attach(_backward)
 
@@ -58,7 +66,7 @@ class Tensor:
 
     def __neg__(self):
         data = -self.data
-        out = Tensor(data=data, _prev=(self,), _op="neg", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="neg", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad -= _unbroadcast(out.grad, self.shape)
@@ -68,11 +76,13 @@ class Tensor:
     def __sub__(self, other):
         other = _to_tensor(other)
         data = self.data - other.data
-        out = Tensor(data=data, _prev=(self, other), _op="sub", requires_grad=True)
+        out = Tensor(data=data, _prev=(self, other), _op="sub", requires_grad=(self.requires_grad or other.requires_grad))
 
         def _backward():
-            self.grad += _unbroadcast(out.grad, self.shape)
-            other.grad -= _unbroadcast(out.grad, other.shape)
+            if self.requires_grad:
+                self.grad += _unbroadcast(out.grad, self.shape)
+            if other.requires_grad:
+                other.grad -= _unbroadcast(out.grad, other.shape)
 
         return out._attach(_backward)
 
@@ -83,11 +93,13 @@ class Tensor:
     def __mul__(self, other):
         other = _to_tensor(other)
         data = self.data * other.data
-        out = Tensor(data=data, _prev=(self, other), _op="mul", requires_grad=True)
+        out = Tensor(data=data, _prev=(self, other), _op="mul", requires_grad=(self.requires_grad or other.requires_grad))
 
         def _backward():
-            self.grad += _unbroadcast(out.grad * other.data, self.shape)
-            other.grad += _unbroadcast(out.grad * self.data, other.shape)
+            if self.requires_grad:
+                self.grad += _unbroadcast(out.grad * other.data, self.shape)
+            if other.requires_grad:
+                other.grad += _unbroadcast(out.grad * self.data, other.shape)
 
         return out._attach(_backward)
 
@@ -98,11 +110,13 @@ class Tensor:
     def __truediv__(self, other):
         other = _to_tensor(other)
         data = self.data / other.data
-        out = Tensor(data=data, _prev=(self, other), _op="truediv", requires_grad=True)
+        out = Tensor(data=data, _prev=(self, other), _op="truediv", requires_grad=(self.requires_grad or other.requires_grad))
 
         def _backward():
-            self.grad += _unbroadcast(out.grad / other.data, self.shape)
-            other.grad += _unbroadcast(-out.grad * self.data / (other.data**2), other.shape)
+            if self.requires_grad:
+                self.grad += _unbroadcast(out.grad / other.data, self.shape)
+            if other.requires_grad:
+                other.grad += _unbroadcast(-out.grad * self.data / (other.data**2), other.shape)
 
         return out._attach(_backward)
 
@@ -115,7 +129,7 @@ class Tensor:
             raise TypeError("Exponent can not be of type Tensor")
 
         data = self.data**other
-        out = Tensor(data=data, _prev=(self,), _op="pow", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="pow", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad += _unbroadcast(other * out.grad * (self.data ** (other - 1)), self.shape)
@@ -125,11 +139,13 @@ class Tensor:
     def __matmul__(self, other):
         other = _to_tensor(other)
         data = self.data @ other.data
-        out = Tensor(data=data, _prev=(self, other), _op="matmul", requires_grad=True)
+        out = Tensor(data=data, _prev=(self, other), _op="matmul", requires_grad=(self.requires_grad or other.requires_grad))
 
         def _backward():
-            self.grad += _unbroadcast(out.grad @ other.data.swapaxes(-2, -1), self.shape)
-            other.grad += _unbroadcast(self.data.swapaxes(-2, -1) @ out.grad, other.shape)
+            if self.requires_grad:
+                self.grad += _unbroadcast(out.grad @ other.data.swapaxes(-2, -1), self.shape)
+            if other.requires_grad:
+                other.grad += _unbroadcast(self.data.swapaxes(-2, -1) @ out.grad, other.shape)
 
         return out._attach(_backward)
 
@@ -138,8 +154,10 @@ class Tensor:
         return other.__matmul__(self)
 
     def __getitem__(self, ids):
+        if isinstance(ids, Tensor):
+            ids = ids.data
         data = self.data[ids]
-        out = Tensor(data=data, _prev=(self, ), _op="getitem", requires_grad=True)
+        out = Tensor(data=data, _prev=(self, ), _op="getitem", requires_grad=self.requires_grad)
 
         def _backward():
             np.add.at(self.grad, ids, out.grad)
@@ -148,7 +166,7 @@ class Tensor:
 
     def exp(self):
         data = np.exp(self.data)
-        out = Tensor(data=data, _prev=(self,), _op="exp", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="exp", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad += _unbroadcast(out.grad * data, self.shape)
@@ -157,7 +175,7 @@ class Tensor:
 
     def log(self):
         data = np.log(self.data)
-        out = Tensor(data=data, _prev=(self,), _op="log", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="log", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad += _unbroadcast(out.grad / self.data, self.shape)
@@ -166,7 +184,7 @@ class Tensor:
 
     def relu(self):
         data = np.maximum(self.data, 0)
-        out = Tensor(data=data, _prev=(self,), _op="relu", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="relu", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad += _unbroadcast(out.grad * (data > 0), self.shape)
@@ -175,7 +193,7 @@ class Tensor:
 
     def tanh(self):
         data = np.tanh(self.data)
-        out = Tensor(data=data, _prev=(self,), _op="tanh", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="tanh", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad += _unbroadcast(out.grad * (1 - (data**2)), self.shape)
@@ -184,7 +202,7 @@ class Tensor:
 
     def sum(self, axis=None, keepdims=False):
         data = np.sum(self.data, axis=axis, keepdims=keepdims)
-        out = Tensor(data=data, _prev=(self,), _op="sum", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="sum", requires_grad=self.requires_grad)
 
         def _backward():
             # Restore the reduced axis so the gradient broadcasts back
@@ -197,7 +215,7 @@ class Tensor:
 
     def mean(self, axis=None, keepdims=False):
         data = np.mean(self.data, axis=axis, keepdims=keepdims)
-        out = Tensor(data=data, _prev=(self,), _op="mean", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="mean", requires_grad=self.requires_grad)
 
         def _backward():
             # Each input contributes 1 / (number of elements averaged over)
@@ -217,7 +235,7 @@ class Tensor:
 
     def reshape(self, *shape):
         data = self.data.reshape(shape)
-        out = Tensor(data=data, _prev=(self,), _op="reshape", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="reshape", requires_grad=self.requires_grad)
 
         def _backward():
             self.grad += out.grad.reshape(self.shape)
@@ -226,7 +244,7 @@ class Tensor:
 
     def transpose(self, axes=None):
         data = np.transpose(self.data, axes=axes)
-        out = Tensor(data=data, _prev=(self,), _op="transpose", requires_grad=True)
+        out = Tensor(data=data, _prev=(self,), _op="transpose", requires_grad=self.requires_grad)
 
         def _backward():
             if axes is None:
@@ -285,7 +303,7 @@ class Tensor:
 
     def backward(self):
         if self.data.size != 1:
-            raise ValueError("Start musst be scalar")
+            raise ValueError("Start must be scalar")
 
         order = self.topological_order()
         self.grad = np.ones(self.shape, dtype=DTYPE)

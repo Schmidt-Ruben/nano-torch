@@ -3,6 +3,7 @@ import numpy as np
 from data import *
 
 text = load_text(path="text_dataset/input.txt")
+rng = np.random.default_rng(seed=128)
 
 print(len(text)) #Should be ca. 1.1m
 print(text[:10]) 

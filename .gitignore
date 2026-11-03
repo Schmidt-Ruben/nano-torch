@@ -1,10 +1,7 @@
-
 __pycache__/
 *.pyc
 
 .venv/
-
-
 .vscode/
 
 .DS_Store
@@ -15,3 +12,5 @@ model_checkpoints/
 
 .VSCodeCounter
 text_dataset
+
+temp.py

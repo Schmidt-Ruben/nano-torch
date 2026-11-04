@@ -1,3 +1,5 @@
+# Evaluates the weights saved by manual_mnist.py on the MNIST test set
+
 import numpy as np
 
 from manual_mnist import ROOT, forward, X_test, Y_test

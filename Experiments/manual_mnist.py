@@ -1,4 +1,6 @@
-import struct
+# Reference MNIST network written with plain numpy, including a hand derived backward pass.
+# Used as ground truth for checking the autograd in comparison.py.
+
 import sys
 from pathlib import Path
 
@@ -8,7 +10,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from data import get_batches  
+from data import get_batches, load_mnist_images, load_mnist_labels
 
 BATCH_SIZE = 128
 LEARNING_RATE = 0.1
@@ -18,28 +20,6 @@ CHECKPOINT_EVERY = 10  # epochs between intermediate checkpoints
 
 DATASET_DIR = ROOT / "mnist_dataset"
 CHECKPOINT_DIR = ROOT / "model_checkpoints"
-
-
-def load_mnist_images(filename):
-    with open(filename, "rb") as f:
-        magic, num_images, rows, cols = struct.unpack(">IIII", f.read(16))
-
-        # Load the actual data
-        images = np.fromfile(f, dtype=np.uint8)
-
-        # Flatten to 1 x 784 and normalise values to [0, 1]
-        images = images.reshape(num_images, rows * cols).astype(np.float32)
-        images /= 255.0
-
-        return images
-
-
-def load_mnist_labels(filename):
-    with open(filename, "rb") as f:
-        magic, num_labels = struct.unpack(">II", f.read(8))
-
-        labels = np.fromfile(f, dtype=np.uint8)
-        return labels
 
 
 def one_hot_encoding(array):

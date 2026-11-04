@@ -8,6 +8,7 @@ __pycache__/
 
 mnist_dataset/
 model_checkpoints/
+gpt_checkpoints/
 *.npz
 
 .VSCodeCounter

@@ -4,7 +4,6 @@
 # the loss, all four gradients and the weights after each SGD step.
 #
 
-import struct
 import sys
 from pathlib import Path
 
@@ -17,9 +16,10 @@ import tensor
 
 tensor.DTYPE = "float64"  # must be set before any Tensor is created
 
-from tensor import Tensor  
-from nn import Sequential, Linear, ReLU, cross_entropy  
-from optim import SGD  
+from tensor import Tensor
+from nn import Sequential, Linear, ReLU, cross_entropy
+from optim import SGD
+from data import load_mnist_images, load_mnist_labels
 
 BATCH_SIZE = 128
 HIDDEN = 256  # same as Manual
@@ -30,22 +30,7 @@ TOLERANCE = 1e-8  # max relative error allowed
 DATASET_DIR = ROOT / "mnist_dataset"
 
 
-# Data loaders unchanged from Manual MNIST
-
-def load_mnist_images(filename):
-    with open(filename, "rb") as f:
-        magic, num_images, rows, cols = struct.unpack(">IIII", f.read(16))
-        images = np.fromfile(f, dtype=np.uint8)
-        images = images.reshape(num_images, rows * cols).astype(np.float32)
-        images /= 255.0
-        return images
-
-
-def load_mnist_labels(filename):
-    with open(filename, "rb") as f:
-        magic, num_labels = struct.unpack(">II", f.read(8))
-        return np.fromfile(f, dtype=np.uint8)
-
+# Manual MNIST works with one hot labels
 
 def one_hot(labels, n_classes=10):
     encoded = np.zeros((labels.size, n_classes))
@@ -53,7 +38,7 @@ def one_hot(labels, n_classes=10):
     return encoded
 
 
-# Manual MNIST  forward and backward math without the weight update
+# Manual MNIST forward and backward math without the weight update
 
 def manual_softmax(z):
     e = np.exp(z)
@@ -82,10 +67,11 @@ def manual_loss_and_grads(X, Y, W1, b1, W2, b2):
     return loss, {"W1": dW1, "b1": db1, "W2": dW2, "b2": db2}
 
 
+results = []  # One True or False per comparison, counted at the end
 
-results = []
 
-#Helpers
+# Helpers
+
 def rel_error(a, b):
     # Largest difference relative to the size of the reference values
     a, b = np.asarray(a, dtype=np.float64), np.asarray(b, dtype=np.float64)
@@ -154,7 +140,7 @@ for step in range(STEPS):
     # Framework
     optimizer.zero_grad()
     logits = model(Tensor(X))
-    loss = cross_entropy(logits, Tensor(Y))
+    loss = cross_entropy(logits, Y.argmax(axis=1))
     loss.backward()
 
     # For Manual 1e-8 inside the log shifts its loss by about 1e-8, hence the looser tolerance

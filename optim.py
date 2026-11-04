@@ -2,11 +2,13 @@ import numpy as np
 from tensor import DTYPE
 
 
+# Base class that stores the parameters to update. Subclasses implement step.
 class Optimizer:
     def __init__(self, parameters, lr):
         self.parameters = parameters
         self.lr = lr
 
+    # Gradients accumulate across backward calls, so reset them before each step
     def zero_grad(self):
         for parameter in self.parameters:
             parameter.grad = np.zeros(shape=parameter.shape, dtype=DTYPE)
@@ -21,6 +23,8 @@ class SGD(Optimizer):
             parameter.data -= self.lr * parameter.grad
 
 
+# Adam keeps a running mean of the gradients (m) and of their squares (v)
+# and scales each update by them
 class Adam(Optimizer):
     def __init__(self, parameters, lr=1e-3, beta1=0.9, beta2=0.999, eps=1e-8):
         super().__init__(parameters, lr)
@@ -49,6 +53,8 @@ class Adam(Optimizer):
             self.parameters[index].data -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
 
 
+# Scales all gradients down together if their combined L2 norm exceeds max_norm.
+# Returns the norm before clipping, which is useful for logging.
 def clip_grad_norm(parameters, max_norm=1):
     param_sum = 0
     for parameter in parameters:
@@ -58,6 +64,7 @@ def clip_grad_norm(parameters, max_norm=1):
 
     if norm > max_norm:
         for parameter in parameters:
-            parameter.grad = (max_norm / (norm + 1e-6)) * parameter.grad #avoiding div by zero
+            # The small epsilon avoids division by zero
+            parameter.grad = (max_norm / (norm + 1e-6)) * parameter.grad
 
     return norm

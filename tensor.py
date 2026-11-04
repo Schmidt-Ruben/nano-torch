@@ -1,21 +1,41 @@
 import numpy as np
 
+# Default float type for all tensors. Experiments can switch it to float64 before
+# creating any tensor to get exact comparisons.
 DTYPE = "float32"
+
+# Global switch that NoGrad turns off. While False no computation graph is built.
 _grad_enabled = True
 
+# Shared random generator for weight initialisation and dropout.
+# Call set_seed to make runs reproducible.
+_rng = np.random.default_rng(seed=1234)
 
+
+# A numpy array plus the information needed for reverse mode autodiff.
+# Each tensor remembers the tensors it was computed from (_prev) and a
+# _backward function that passes its gradient on to them.
 class Tensor:
+    # Makes numpy hand operations like ndarray * Tensor over to the Tensor methods
     __array_ufunc__ = None
 
     def __init__(self, data, _prev=(), _op="", requires_grad=False, dtype=None):
-        dtype = DTYPE if dtype is None else dtype
         if isinstance(data, Tensor):
             raise TypeError("Tensor does not accept Tensor as data.")
+        # Integer arrays such as token ids keep their dtype, everything else becomes DTYPE
+        if dtype is None:
+            dtype = (
+                data.dtype
+                if isinstance(data, np.ndarray) and np.issubdtype(data.dtype, np.integer)
+                else DTYPE
+            )
+        if requires_grad and not np.issubdtype(np.dtype(dtype), np.floating):
+            raise TypeError("Only floating point Tensors can require gradients.")
         self.requires_grad = requires_grad if _grad_enabled else False
-        self.data = np.asarray(data, dtype=dtype) 
+        self.data = np.asarray(data, dtype=dtype)
         self.grad = np.zeros(self.shape, dtype=self.data.dtype) if self.requires_grad else None
         self._prev = _prev if _grad_enabled else ()
-        self._op = _op
+        self._op = _op  # Name of the operation that created this tensor, for debugging
         self._backward = lambda: None
 
     @property
@@ -40,7 +60,7 @@ class Tensor:
 
     @classmethod
     def normal(cls, shape: tuple[int, ...], std=1.0, loc=0.0, requires_grad=False):
-        return cls(np.random.normal(loc=loc, scale=std, size=shape), requires_grad=requires_grad)
+        return cls(_rng.normal(loc=loc, scale=std, size=shape), requires_grad=requires_grad)
 
     def __repr__(self):
         return f"Tensor shape {self.shape} op {self._op} requires grad {self.requires_grad}"
@@ -51,7 +71,12 @@ class Tensor:
     def __add__(self, other):
         other = _to_tensor(other)
         data = self.data + other.data
-        out = Tensor(data=data, _prev=(self, other), _op="add", requires_grad=(self.requires_grad or other.requires_grad))
+        out = Tensor(
+            data=data,
+            _prev=(self, other),
+            _op="add",
+            requires_grad=(self.requires_grad or other.requires_grad),
+        )
 
         def _backward():
             if self.requires_grad:
@@ -76,7 +101,12 @@ class Tensor:
     def __sub__(self, other):
         other = _to_tensor(other)
         data = self.data - other.data
-        out = Tensor(data=data, _prev=(self, other), _op="sub", requires_grad=(self.requires_grad or other.requires_grad))
+        out = Tensor(
+            data=data,
+            _prev=(self, other),
+            _op="sub",
+            requires_grad=(self.requires_grad or other.requires_grad),
+        )
 
         def _backward():
             if self.requires_grad:
@@ -93,7 +123,12 @@ class Tensor:
     def __mul__(self, other):
         other = _to_tensor(other)
         data = self.data * other.data
-        out = Tensor(data=data, _prev=(self, other), _op="mul", requires_grad=(self.requires_grad or other.requires_grad))
+        out = Tensor(
+            data=data,
+            _prev=(self, other),
+            _op="mul",
+            requires_grad=(self.requires_grad or other.requires_grad),
+        )
 
         def _backward():
             if self.requires_grad:
@@ -110,7 +145,12 @@ class Tensor:
     def __truediv__(self, other):
         other = _to_tensor(other)
         data = self.data / other.data
-        out = Tensor(data=data, _prev=(self, other), _op="truediv", requires_grad=(self.requires_grad or other.requires_grad))
+        out = Tensor(
+            data=data,
+            _prev=(self, other),
+            _op="truediv",
+            requires_grad=(self.requires_grad or other.requires_grad),
+        )
 
         def _backward():
             if self.requires_grad:
@@ -139,8 +179,14 @@ class Tensor:
     def __matmul__(self, other):
         other = _to_tensor(other)
         data = self.data @ other.data
-        out = Tensor(data=data, _prev=(self, other), _op="matmul", requires_grad=(self.requires_grad or other.requires_grad))
+        out = Tensor(
+            data=data,
+            _prev=(self, other),
+            _op="matmul",
+            requires_grad=(self.requires_grad or other.requires_grad),
+        )
 
+        # swapaxes(-2, -1) transposes the last two axes so batched matmuls work too
         def _backward():
             if self.requires_grad:
                 self.grad += _unbroadcast(out.grad @ other.data.swapaxes(-2, -1), self.shape)
@@ -157,11 +203,12 @@ class Tensor:
         if isinstance(ids, Tensor):
             ids = ids.data
         data = self.data[ids]
-        out = Tensor(data=data, _prev=(self, ), _op="getitem", requires_grad=self.requires_grad)
+        out = Tensor(data=data, _prev=(self,), _op="getitem", requires_grad=self.requires_grad)
 
+        # np.add.at also accumulates correctly when the same index appears more than once
         def _backward():
             np.add.at(self.grad, ids, out.grad)
-        
+
         return out._attach(_backward)
 
     def exp(self):
@@ -206,7 +253,7 @@ class Tensor:
 
         def _backward():
             # Restore the reduced axis so the gradient broadcasts back
-            if keepdims == False and axis is not None:
+            if not keepdims and axis is not None:
                 self.grad += np.expand_dims(out.grad, axis=axis)
             else:
                 self.grad += out.grad
@@ -219,7 +266,7 @@ class Tensor:
 
         def _backward():
             # Each input contributes 1 / (number of elements averaged over)
-            if keepdims == False and axis is not None:
+            if not keepdims and axis is not None:
                 self.grad += np.expand_dims(out.grad / (self.data.size / out.grad.size), axis=axis)
             else:
                 self.grad += out.grad / (self.data.size / out.grad.size)
@@ -266,8 +313,9 @@ class Tensor:
     def item(self):
         return self.data.item()
 
-    # works but might hit recursion limit better to use iterative TO
-    def recursive_topological_order(self): 
+    # Works, but deep graphs can hit the recursion limit. Kept for reference,
+    # backward uses the iterative version below.
+    def recursive_topological_order(self):
         visited = set()
         topological_order = []
 
@@ -282,7 +330,8 @@ class Tensor:
         visit(self)
         return topological_order
 
-    # Iterative version to avoid recursion limit
+    # Iterative depth first search that lists every node after all of its inputs.
+    # The flag marks whether a node's inputs have already been pushed.
     def topological_order(self):
         stack = [(self, False)]
         topological_order = []
@@ -306,6 +355,7 @@ class Tensor:
             raise ValueError("Start must be scalar")
 
         order = self.topological_order()
+        # The gradient of the output with respect to itself is 1
         self.grad = np.ones(self.shape, dtype=DTYPE)
 
         # Walk from the output back to the inputs
@@ -318,6 +368,7 @@ class Tensor:
         exp_vals = norm.exp()
         return exp_vals / exp_vals.sum(axis=axis, keepdims=True)
 
+    # Computed directly instead of log(softmax(x)) for numerical stability
     def log_softmax(self, axis=-1):
         norm = self - self.max(axis=axis, keepdims=True)
         exp_sum = norm.exp().sum(axis=axis, keepdims=True)
@@ -325,6 +376,9 @@ class Tensor:
         return norm - exp_sum.log()
 
 
+# A trainable tensor. Modules collect these to hand them to the optimizer.
+# It always requires grad. The argument is accepted but ignored because the inherited
+# zeros, ones and normal constructors pass requires_grad=False by default.
 class Parameter(Tensor):
     def __init__(self, data, requires_grad=True):
         super().__init__(data, requires_grad=True)
@@ -343,6 +397,16 @@ class NoGrad:
     def __exit__(self, exc_type, exc, tb):
         global _grad_enabled
         _grad_enabled = self.prev_value
+
+
+def set_seed(seed):
+    global _rng
+    _rng = np.random.default_rng(seed=seed)
+
+
+def get_rng():
+    # Read the generator through this function, set_seed replaces the object
+    return _rng
 
 
 def _to_tensor(value):  # value can be a number, array or already a Tensor

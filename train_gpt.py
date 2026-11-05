@@ -1,5 +1,7 @@
 # Trains a character level GPT on text_dataset/input.txt and saves checkpoints
 # to gpt_checkpoints/
+import os
+
 import numpy as np
 
 from checkpoints import save_gpt_weights
@@ -43,7 +45,7 @@ def estimate_loss(model, train_data, val_data, batch_size, block_size, eval_iter
     return results
 
 
-# Sanity check that trains on one small fixed batch. If the model and the backward
+# Check that trains on one small fixed batch. If the model and the backward
 # pass are correct the printed loss should drop close to zero.
 def overfit_check(data):
     model = GPT(65, 128, 4, 4, 64)
@@ -89,6 +91,7 @@ def main():
     # Separate generators so evaluation does not change which batches training sees
     rng_train = np.random.default_rng(seed=TRAIN_SEED)
     rng_eval = np.random.default_rng(seed=EVAL_SEED)
+    os.makedirs("gpt_checkpoints", exist_ok=True)
 
     text = load_text("text_dataset/input.txt")
     tok = CharTokenizer(text)

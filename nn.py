@@ -1,5 +1,5 @@
 import numpy as np
-from tensor import Parameter, Tensor, NoGrad, DTYPE, get_rng
+from tensor import Parameter, Tensor, NoGrad, get_rng
 
 # Global switch that EvalMode turns off. Dropout is only active while it is True.
 _training_enabled = True
@@ -275,7 +275,7 @@ class Dropout(Module):
             return x
 
         mask = get_rng().binomial(n=1, p=(1 - self.p), size=x.shape)
-        scale = (mask / (1 - self.p)).astype(DTYPE)
+        scale = (mask / (1 - self.p)).astype(x.dtype)
         return x * scale
 
 

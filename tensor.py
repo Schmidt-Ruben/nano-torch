@@ -356,7 +356,7 @@ class Tensor:
 
         order = self.topological_order()
         # The gradient of the output with respect to itself is 1
-        self.grad = np.ones(self.shape, dtype=DTYPE)
+        self.grad = np.ones(self.shape, dtype=self.dtype)
 
         # Walk from the output back to the inputs
         for node in reversed(order):

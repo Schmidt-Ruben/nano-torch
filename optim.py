@@ -1,5 +1,4 @@
 import numpy as np
-from tensor import DTYPE
 
 
 # Base class that stores the parameters to update. Subclasses implement step.
@@ -8,10 +7,11 @@ class Optimizer:
         self.parameters = parameters
         self.lr = lr
 
-    # Gradients accumulate across backward calls, so reset them before each step
+    # Gradients accumulate across backward calls, so reset them before each step.
+    # zeros_like keeps the dtype of each parameter instead of reading tensor.DTYPE.
     def zero_grad(self):
         for parameter in self.parameters:
-            parameter.grad = np.zeros(shape=parameter.shape, dtype=DTYPE)
+            parameter.grad = np.zeros_like(parameter.data)
 
 
 class SGD(Optimizer):
@@ -32,8 +32,8 @@ class Adam(Optimizer):
         self.beta2 = beta2
         self.eps = eps
         self.t = 0  # step counter for bias correction
-        self.m = [np.zeros(parameter.shape, dtype=DTYPE) for parameter in self.parameters]
-        self.v = [np.zeros(parameter.shape, dtype=DTYPE) for parameter in self.parameters]
+        self.m = [np.zeros_like(parameter.data) for parameter in self.parameters]
+        self.v = [np.zeros_like(parameter.data) for parameter in self.parameters]
 
     def step(self):
         self.t += 1

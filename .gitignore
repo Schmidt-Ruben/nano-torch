@@ -15,3 +15,4 @@ gpt_checkpoints/
 text_dataset
 
 temp.py
+.pytest_cache/

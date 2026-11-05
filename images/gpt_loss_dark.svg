@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="380" viewBox="0 0 720 380" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img" aria-label="Train and validation loss of the Shakespeare GPT over 5000 steps. Both fall from 3.9. Train ends at 1.48 and validation at 1.67.">
+<rect width="720" height="380" rx="8" fill="#1a1a19"/>
+<text x="16" y="30" font-size="16" font-weight="600" fill="#f0efec">Shakespeare GPT: loss during training</text>
+<text x="16" y="50" font-size="12" fill="#c3c2b7">Mean cross-entropy over 20 random batches, measured every 50 steps</text>
+<line x1="16" y1="68" x2="32" y2="68" stroke="#3987e5" stroke-width="2" stroke-linecap="round"/>
+<text x="38" y="72" font-size="12" fill="#c3c2b7">Train</text>
+<line x1="91" y1="68" x2="107" y2="68" stroke="#d95926" stroke-width="2" stroke-linecap="round"/>
+<text x="113" y="72" font-size="12" fill="#c3c2b7">Validation</text>
+<line x1="52" y1="313.1" x2="588" y2="313.1" stroke="#2c2c2a" stroke-width="1"/>
+<text x="44" y="317.1" font-size="11" text-anchor="end" fill="#898781" style="font-variant-numeric: tabular-nums">1.5</text>
+<line x1="52" y1="267.3" x2="588" y2="267.3" stroke="#2c2c2a" stroke-width="1"/>
+<text x="44" y="271.3" font-size="11" text-anchor="end" fill="#898781" style="font-variant-numeric: tabular-nums">2.0</text>
+<line x1="52" y1="221.5" x2="588" y2="221.5" stroke="#2c2c2a" stroke-width="1"/>
+<text x="44" y="225.5" font-size="11" text-anchor="end" fill="#898781" style="font-variant-numeric: tabular-nums">2.5</text>
+<line x1="52" y1="175.6" x2="588" y2="175.6" stroke="#2c2c2a" stroke-width="1"/>
+<text x="44" y="179.6" font-size="11" text-anchor="end" fill="#898781" style="font-variant-numeric: tabular-nums">3.0</text>
+<line x1="52" y1="129.8" x2="588" y2="129.8" stroke="#2c2c2a" stroke-width="1"/>
+<text x="44" y="133.8" font-size="11" text-anchor="end" fill="#898781" style="font-variant-numeric: tabular-nums">3.5</text>
+<line x1="52" y1="84.0" x2="588" y2="84.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="44" y="88.0" font-size="11" text-anchor="end" fill="#898781" style="font-variant-numeric: tabular-nums">4.0</text>
+<line x1="52" y1="336" x2="588" y2="336" stroke="#383835" stroke-width="1"/>
+<text x="52.0" y="354" font-size="11" text-anchor="middle" fill="#898781" style="font-variant-numeric: tabular-nums">0</text>
+<text x="159.2" y="354" font-size="11" text-anchor="middle" fill="#898781" style="font-variant-numeric: tabular-nums">1,000</text>
+<text x="266.4" y="354" font-size="11" text-anchor="middle" fill="#898781" style="font-variant-numeric: tabular-nums">2,000</text>
+<text x="373.6" y="354" font-size="11" text-anchor="middle" fill="#898781" style="font-variant-numeric: tabular-nums">3,000</text>
+<text x="480.8" y="354" font-size="11" text-anchor="middle" fill="#898781" style="font-variant-numeric: tabular-nums">4,000</text>
+<text x="588.0" y="354" font-size="11" text-anchor="middle" fill="#898781" style="font-variant-numeric: tabular-nums">5,000</text>
+<text x="588" y="372" font-size="11" text-anchor="end" fill="#898781">Training step</text>
+<path d="M52.0,91.8 L57.4,195.6 L62.7,212.0 L68.1,219.9 L73.4,225.4 L78.8,232.3 L84.2,239.1 L89.5,245.8 L94.9,247.9 L100.2,251.7 L105.6,255.3 L111.0,258.3 L116.3,260.1 L121.7,262.1 L127.0,264.3 L132.4,265.3 L137.8,265.0 L143.1,267.3 L148.5,270.3 L153.8,271.5 L159.2,269.6 L164.6,272.0 L169.9,275.3 L175.3,273.6 L180.6,275.9 L186.0,275.3 L191.4,276.8 L196.7,279.7 L202.1,274.6 L207.4,278.4 L212.8,279.1 L218.2,280.5 L223.5,280.5 L228.9,279.5 L234.2,281.9 L239.6,281.9 L245.0,281.3 L250.3,282.1 L255.7,282.8 L261.0,285.5 L266.4,284.1 L271.8,284.2 L277.1,286.8 L282.5,286.6 L287.8,285.1 L293.2,288.1 L298.6,287.6 L303.9,288.4 L309.3,287.5 L314.6,288.8 L320.0,287.7 L325.4,289.4 L330.7,290.8 L336.1,289.4 L341.4,288.9 L346.8,290.6 L352.2,289.9 L357.5,289.9 L362.9,291.3 L368.2,288.5 L373.6,291.2 L379.0,290.8 L384.3,289.7 L389.7,290.8 L395.0,290.9 L400.4,293.4 L405.8,290.5 L411.1,293.7 L416.5,293.3 L421.8,293.7 L427.2,293.9 L432.6,293.0 L437.9,294.5 L443.3,294.4 L448.6,292.4 L454.0,293.2 L459.4,295.4 L464.7,294.9 L470.1,295.4 L475.4,295.4 L480.8,292.8 L486.2,294.9 L491.5,295.4 L496.9,296.1 L502.2,297.0 L507.6,294.4 L513.0,295.7 L518.3,295.3 L523.7,296.8 L529.0,296.5 L534.4,296.5 L539.8,297.3 L545.1,297.7 L550.5,297.4 L555.8,294.5 L561.2,298.1 L566.6,297.0 L571.9,296.5 L577.3,298.9 L582.6,297.6" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M52.0,92.8 L57.4,197.3 L62.7,213.3 L68.1,220.3 L73.4,225.6 L78.8,232.3 L84.2,241.0 L89.5,245.9 L94.9,250.8 L100.2,254.2 L105.6,257.8 L111.0,261.8 L116.3,265.7 L121.7,267.2 L127.0,269.3 L132.4,272.9 L137.8,273.8 L143.1,274.8 L148.5,277.5 L153.8,280.2 L159.2,281.3 L164.6,281.4 L169.9,284.9 L175.3,285.3 L180.6,286.8 L186.0,287.4 L191.4,288.5 L196.7,291.2 L202.1,289.6 L207.4,291.9 L212.8,292.9 L218.2,293.0 L223.5,293.8 L228.9,292.5 L234.2,296.0 L239.6,296.3 L245.0,295.0 L250.3,298.7 L255.7,298.1 L261.0,298.1 L266.4,298.9 L271.8,300.4 L277.1,300.4 L282.5,301.2 L287.8,301.8 L293.2,302.9 L298.6,302.3 L303.9,303.9 L309.3,302.7 L314.6,304.5 L320.0,304.0 L325.4,303.2 L330.7,306.4 L336.1,306.6 L341.4,305.6 L346.8,306.0 L352.2,305.9 L357.5,306.5 L362.9,307.6 L368.2,307.1 L373.6,307.4 L379.0,307.0 L384.3,308.0 L389.7,307.8 L395.0,308.3 L400.4,309.4 L405.8,310.0 L411.1,309.2 L416.5,308.4 L421.8,310.2 L427.2,310.7 L432.6,311.1 L437.9,310.3 L443.3,311.2 L448.6,311.3 L454.0,312.2 L459.4,309.2 L464.7,311.4 L470.1,311.9 L475.4,312.4 L480.8,312.5 L486.2,312.5 L491.5,310.5 L496.9,314.1 L502.2,313.4 L507.6,312.5 L513.0,311.6 L518.3,313.1 L523.7,314.4 L529.0,313.8 L534.4,313.6 L539.8,313.8 L545.1,313.7 L550.5,315.1 L555.8,315.4 L561.2,313.2 L566.6,315.5 L571.9,316.8 L577.3,316.4 L582.6,315.4" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="582.6" cy="315.4" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<text x="592.6" y="319.4" font-size="12" fill="#f0efec">Train <tspan font-weight="600">1.48</tspan></text>
+<circle cx="582.6" cy="297.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<text x="592.6" y="301.6" font-size="12" fill="#f0efec">Validation <tspan font-weight="600">1.67</tspan></text>
+</svg>
